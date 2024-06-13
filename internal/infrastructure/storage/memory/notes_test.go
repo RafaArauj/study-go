@@ -10,7 +10,7 @@ func TestNotesController(t *testing.T) {
 	c := NewNotesController()
 
 	t.Run("CreateNote", func(t *testing.T) {
-		err := c.CreateNote(&entities.Note{
+		err := c.CreateNote(nil, &entities.Note{
 			ID:   "1",
 			Text: "Exemplo",
 		})
@@ -19,7 +19,7 @@ func TestNotesController(t *testing.T) {
 			t.FailNow()
 		}
 
-		err = c.CreateNote(&entities.Note{
+		err = c.CreateNote(nil, &entities.Note{
 			ID:   "1",
 			Text: "Exemplo",
 		})

@@ -1,8 +1,8 @@
 package memory
 
 import (
+	"context"
 	"github.com/RafaArauj/study-go/internal/domains/entities"
-	"time"
 )
 
 /*
@@ -31,7 +31,7 @@ func NewNotesController() *NotesMemoryStorage {
 	}
 }
 
-func (n *NotesMemoryStorage) CreateNote(note *entities.Note) error {
+func (n *NotesMemoryStorage) CreateNote(ctx context.Context, note *entities.Note) error {
 	_, exists := n.Notes[note.ID]
 	if exists {
 		return entities.ErrNoteConflict
@@ -40,7 +40,7 @@ func (n *NotesMemoryStorage) CreateNote(note *entities.Note) error {
 	n.NotesList = append(n.NotesList, note.ID)
 	return nil
 }
-func (n *NotesMemoryStorage) GetById(id string) (*entities.Note, error) {
+func (n *NotesMemoryStorage) GetById(ctx context.Context, id string) (*entities.Note, error) {
 	note, exists := n.Notes[id]
 	if !exists {
 		return nil, entities.ErrNoteNotFound
@@ -48,14 +48,14 @@ func (n *NotesMemoryStorage) GetById(id string) (*entities.Note, error) {
 
 	return note, nil
 }
-func (n *NotesMemoryStorage) List() ([]*entities.Note, error) {
+func (n *NotesMemoryStorage) List(context.Context) ([]*entities.Note, error) {
 	result := make([]*entities.Note, len(n.NotesList))
 	for i, v := range n.NotesList {
 		result[i] = n.Notes[v]
 	}
 	return result, nil
 }
-func (n *NotesMemoryStorage) DeleteById(id string) error {
+func (n *NotesMemoryStorage) DeleteById(ctx context.Context, id string) error {
 	_, exists := n.Notes[id]
 	if !exists {
 		return entities.ErrNoteNotFound
@@ -72,12 +72,11 @@ func (n *NotesMemoryStorage) DeleteById(id string) error {
 	return nil
 }
 
-func (n *NotesMemoryStorage) EditById(id, text string, updatedAt time.Time) error {
+func (n *NotesMemoryStorage) EditById(ctx context.Context, id string, note *entities.Note) error {
 	_, exists := n.Notes[id]
 	if !exists {
 		return entities.ErrNoteNotFound
 	}
-	n.Notes[id].UpdatedAt = updatedAt
-	n.Notes[id].Text = text
+	n.Notes[id] = note
 	return nil
 }

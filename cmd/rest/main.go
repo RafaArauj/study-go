@@ -1,11 +1,14 @@
 package main
 
 import (
+	"github.com/RafaArauj/study-go/internal/controllers/rest"
+	"github.com/RafaArauj/study-go/internal/infrastructure/generators"
+	"github.com/RafaArauj/study-go/internal/infrastructure/storage/memory"
+	"github.com/RafaArauj/study-go/internal/services"
 	_ "github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
-	"time"
 )
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -30,78 +33,15 @@ func main() {
 	log.Print("Iniciando o servidor")
 	r := gin.Default()
 	r.Use(CORSMiddleware())
-	noteControler := NewNotesController()
+	noteControler := rest.NewNoteRestController(services.NewNotesService(memory.NewNotesController(), generators.NewAlphabetIDGen()))
 
 	api := r.Group("/api")
-	api.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "Qualquer coisa que estou botando aqui")
-	})
 	notes := api.Group("/notes").Use(CORSMiddleware())
 	//o api. cria a estrutura padrão de "api/notes"
-	notes.POST("/", func(c *gin.Context) {
-		var (
-			note Note
-			now  = time.Now()
-		)
-		if err := c.BindJSON(&note); err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-
-		if note.Text == "" {
-			c.AbortWithError(http.StatusBadRequest, ErrInvalidNote)
-			return
-		}
-		note.ID = generateId()
-		note.CreatedAt = now
-		note.UpdatedAt = now
-		err := noteControler.CreateNote(&note)
-		if err == ErrNoteConflict {
-			c.AbortWithError(http.StatusConflict, err)
-			return
-		}
-	})
-	notes.GET("/", func(c *gin.Context) {
-		n, err := noteControler.List()
-		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-		c.JSON(http.StatusOK, n)
-
-	})
-	notes.DELETE("/:id", func(c *gin.Context) {
-		err := noteControler.DeleteById(c.Param("id"))
-		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-		c.Status(http.StatusOK)
-
-	})
-	notes.PATCH("/:id", func(c *gin.Context) {
-		var (
-			note Note
-			now  = time.Now()
-		)
-		if err := c.BindJSON(&note); err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-
-		if note.Text == "" {
-			c.AbortWithError(http.StatusBadRequest, ErrInvalidNote)
-			return
-		}
-
-		err := noteControler.EditById(c.Param("id"), note.Text, now)
-		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-		c.Status(http.StatusOK)
-
-	})
+	notes.POST("/", noteControler.CreateNote)
+	notes.GET("/", noteControler.ListNotes)
+	notes.DELETE("/:id", noteControler.DeleteNotes)
+	notes.PATCH("/:id", noteControler.EditNotes)
 	r.Run()
 
 }

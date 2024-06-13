@@ -1,14 +1,21 @@
 package repositories
 
 import (
+	"context"
 	"github.com/RafaArauj/study-go/internal/domains/entities"
-	"time"
 )
 
 type NotesStorage interface {
-	CreateNote(note *entities.Note) error
-	GetById(id string) (*entities.Note, error)
-	List() ([]*entities.Note, error)
-	DeleteById(id string) error
-	EditById(id, text string, updatedAt time.Time) error
+	CreateNote(ctx context.Context, note *entities.Note) error
+	GetById(ctx context.Context, id string) (*entities.Note, error)
+	List(ctx context.Context) ([]*entities.Note, error)
+	DeleteById(ctx context.Context, id string) error
+	EditById(ctx context.Context, id string, note *entities.Note) error
+}
+type NotesService interface {
+	CreateNote(ctx context.Context, text string) error
+	GetById(ctx context.Context, id string) (*entities.Note, error)
+	List(ctx context.Context) ([]*entities.Note, error)
+	DeleteById(ctx context.Context, id string) error
+	EditById(ctx context.Context, id, text string) error
 }
