@@ -34,10 +34,14 @@ func main() {
 	r := gin.Default()
 	r.Use(CORSMiddleware())
 	noteControler := rest.NewNoteRestController(services.NewNotesService(memory.NewNotesController(), generators.NewAlphabetIDGen()))
+	userControler := rest.NewUserRestController(services.NewUserService(memory.NewUserStorage(), generators.NewAlphabetIDGen(), generators.NewHashGen()))
 
 	api := r.Group("/api")
-	notes := api.Group("/notes").Use(CORSMiddleware())
+	users := api.Group("/users").Use(CORSMiddleware())
+	notes := api.Group("/notes").Use(CORSMiddleware(), userControler.AuthenticationUser)
 	//o api. cria a estrutura padrão de "api/notes"
+	users.GET("/", userControler.ListUser)
+	users.POST("/", userControler.CreateUser)
 	notes.POST("/", noteControler.CreateNote)
 	notes.GET("/", noteControler.ListNotes)
 	notes.DELETE("/:id", noteControler.DeleteNotes)

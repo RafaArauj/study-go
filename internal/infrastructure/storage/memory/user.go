@@ -8,6 +8,7 @@ import (
 type UserStorage struct {
 	user      map[string]*entities.User
 	loginToID map[string]string
+	UserList  []string
 }
 
 func NewUserStorage() *UserStorage {
@@ -42,8 +43,16 @@ func (u *UserStorage) CreateUser(ctx context.Context, user *entities.User) error
 	if _, exists := u.loginToID[user.Login]; exists {
 		return entities.ErrUserConflict
 	}
-
 	u.user[user.ID] = user
 	u.loginToID[user.Login] = user.ID
+	u.UserList = append(u.UserList, user.ID)
 	return nil
+}
+
+func (u *UserStorage) List(ctx context.Context) ([]*entities.User, error) {
+	result := make([]*entities.User, len(u.UserList))
+	for i, v := range u.UserList {
+		result[i] = u.user[v]
+	}
+	return result, nil
 }
